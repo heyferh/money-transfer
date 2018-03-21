@@ -17,8 +17,8 @@ java -jar app.jar
 ```
 ### API usage
 * ```GET /account ```
-* ```GET /account/{id}```
-* ```GET /transfer/{id} ```
+* ```GET /account/{accountId}```
+* ```GET /transfer/{accountId} ```
 * ```POST /account ```
 ##### Sample request to create an account
     {

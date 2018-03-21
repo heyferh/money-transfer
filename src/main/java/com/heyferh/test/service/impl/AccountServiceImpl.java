@@ -39,8 +39,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account find(long id) {
+    public Account find(long id) throws UnknownAccountException {
         AccountEntity accountEntity = accountRepository.find(id);
+        if (accountEntity == null) {
+            throw new UnknownAccountException(id);
+        }
         return new Account(id,
                 new Money(accountEntity.getMoneyEntity().getAmount(), accountEntity.getMoneyEntity().getCurrency()));
     }

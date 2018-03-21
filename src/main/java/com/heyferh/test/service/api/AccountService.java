@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface AccountService {
 
-    Account find(long id);
+    Account find(long id) throws UnknownAccountException;
 
     List<Account> findAll();
 

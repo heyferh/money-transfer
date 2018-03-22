@@ -9,7 +9,7 @@
 ```
 ### Run server at localhost:4567
 ```
-./mvnw clean package exec:java
+./mvnw clean compile exec:java
 ```
 ##### OR
 ```

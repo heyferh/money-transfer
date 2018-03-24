@@ -14,7 +14,6 @@ import com.heyferh.test.util.UnknownAccountException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +32,6 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    @Inject
     public AccountServiceImpl(AccountRepository accountRepository,
                               TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;

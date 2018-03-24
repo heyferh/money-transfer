@@ -12,21 +12,38 @@ import com.heyferh.test.service.impl.TransactionServiceImpl;
 import dagger.Module;
 import dagger.Provides;
 
+import javax.inject.Singleton;
+
 @Module
 public class AppComponentModule {
 
     @Provides
-    public AccountService accountService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    @Singleton
+    public AccountRepository provideAccountRepository() {
+        return new AccountRepository();
+    }
+
+    @Provides
+    @Singleton
+    public TransactionRepository provideTransactionRepository() {
+        return new TransactionRepository();
+    }
+
+    @Provides
+    @Singleton
+    public AccountService provideAccountService(AccountRepository accountRepository, TransactionRepository transactionRepository) {
         return new AccountServiceImpl(accountRepository, transactionRepository);
     }
 
     @Provides
-    public TransactionService transactionService(TransactionRepository transactionRepository) {
+    @Singleton
+    public TransactionService provideTransactionService(TransactionRepository transactionRepository) {
         return new TransactionServiceImpl(transactionRepository);
     }
 
     @Provides
-    public ObjectMapper objectMapper() {
+    @Singleton
+    public ObjectMapper provideObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);

@@ -11,7 +11,7 @@ version = '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-mainClassName = "com.heyferh.test.rest.Main"
+mainClassName = "com.heyferh.test.Main"
 
 sourceSets {
     main {

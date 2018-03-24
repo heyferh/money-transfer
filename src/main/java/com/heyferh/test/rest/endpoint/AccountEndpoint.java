@@ -8,8 +8,10 @@ import com.heyferh.test.util.UnknownAccountException;
 import spark.Service;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.List;
 
+@Singleton
 public class AccountEndpoint implements EndpointConfigurer {
 
     private final AccountService accountService;

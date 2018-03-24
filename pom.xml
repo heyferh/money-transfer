@@ -16,6 +16,7 @@
         <jackson-databind.version>2.8.10</jackson-databind.version>
         <logback-core.version>1.2.3</logback-core.version>
         <junit.version>4.12</junit.version>
+        <dagger.version>2.6</dagger.version>
     </properties>
 
     <dependencies>
@@ -39,6 +40,20 @@
             <artifactId>spark-core</artifactId>
             <version>${spark-core.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.google.dagger</groupId>
+            <artifactId>dagger</artifactId>
+            <version>${dagger.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.dagger</groupId>
+            <artifactId>dagger-compiler</artifactId>
+            <version>${dagger.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -85,7 +100,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>com.heyferh.test.rest.Main</mainClass>
+                    <mainClass>com.heyferh.test.Main</mainClass>
                 </configuration>
             </plugin>
             <plugin>
@@ -93,7 +108,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.heyferh.test.rest.Main</mainClass>
+                            <mainClass>com.heyferh.test.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

@@ -1,0 +1,46 @@
+plugins {
+    id 'java'
+    id 'idea'
+    id 'application'
+    id "net.ltgt.apt" version "0.15"
+}
+
+group = 'com.heyferh'
+version = '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+mainClassName = "com.heyferh.test.rest.Main"
+
+sourceSets {
+    main {
+        output.resourcesDir = output.classesDirs.singleFile
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("$buildDir/generated/source/apt/main")
+        testSourceDirs += file("$buildDir/generated/source/apt/test")
+    }
+}
+
+dependencies {
+    compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.9.Final'
+    compile group: 'org.hibernate', name: 'hibernate-c3p0', version: '5.2.9.Final'
+    compile group: 'com.h2database', name: 'h2', version: '1.4.197'
+    compile group: 'com.sparkjava', name: 'spark-core', version: '2.7.2'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.10'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.8.10'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    compile 'com.google.dagger:dagger:2.6'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.6'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+repositories {
+    mavenCentral()
+}

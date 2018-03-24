@@ -7,17 +7,18 @@ import com.heyferh.test.util.NegativeFundsException;
 import com.heyferh.test.util.UnknownAccountException;
 import spark.Service;
 
+import javax.inject.Inject;
 import java.util.List;
 
 public class AccountEndpoint implements EndpointConfigurer {
 
     private final AccountService accountService;
-
     private final ObjectMapper objectMapper;
 
-    public AccountEndpoint(AccountService accountService) {
+    @Inject
+    public AccountEndpoint(AccountService accountService, ObjectMapper objectMapper) {
         this.accountService = accountService;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     @Override

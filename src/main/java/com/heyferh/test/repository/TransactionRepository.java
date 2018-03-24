@@ -2,12 +2,17 @@ package com.heyferh.test.repository;
 
 import com.heyferh.test.entity.TransactionEntity;
 
+import javax.inject.Inject;
 import java.util.List;
 
 import static com.heyferh.test.util.EntityManagerHelper.closeEntityManager;
 import static com.heyferh.test.util.EntityManagerHelper.getEntityManager;
 
 public class TransactionRepository {
+
+    @Inject
+    public TransactionRepository() {
+    }
 
     public void create(TransactionEntity transactionEntity) {
         getEntityManager().persist(transactionEntity);

@@ -1,8 +1,6 @@
 package com.heyferh.test.rest.endpoint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.heyferh.test.model.Transaction;
 import com.heyferh.test.model.Transfer;
 import com.heyferh.test.service.api.AccountService;
@@ -12,6 +10,7 @@ import com.heyferh.test.util.NegativeFundsException;
 import com.heyferh.test.util.UnknownAccountException;
 import spark.Service;
 
+import javax.inject.Inject;
 import java.util.List;
 
 public class TransactionEndpoint implements EndpointConfigurer {
@@ -20,12 +19,11 @@ public class TransactionEndpoint implements EndpointConfigurer {
     private final AccountService accountService;
     private final ObjectMapper objectMapper;
 
-    public TransactionEndpoint(TransactionService transactionService, AccountService accountService) {
+    @Inject
+    public TransactionEndpoint(TransactionService transactionService, AccountService accountService, ObjectMapper objectMapper) {
         this.transactionService = transactionService;
         this.accountService = accountService;
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.registerModule(new JavaTimeModule());
-        this.objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        this.objectMapper = objectMapper;
     }
 
     @Override

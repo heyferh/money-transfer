@@ -6,6 +6,7 @@ import com.heyferh.test.model.Transaction;
 import com.heyferh.test.repository.TransactionRepository;
 import com.heyferh.test.service.api.TransactionService;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
 
+    @Inject
     public TransactionServiceImpl(TransactionRepository transactionRepository) {
         this.transactionRepository = transactionRepository;
     }

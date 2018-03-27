@@ -5,15 +5,11 @@
 4. For the sake of simplicity only 3 currencies are supported: **USD, EUR, RUB**
 ### Run tests
 ```
-./mvnw clean test
+./gradlew test
 ```
 ### Run server at localhost:4567
 ```
-./mvnw clean compile exec:java
-```
-##### OR
-```
-java -jar app.jar
+./gradlew run
 ```
 ### API usage
 * ```GET /account ```
@@ -59,6 +55,8 @@ java -jar app.jar
 1. **Spark**
 2. **H2 in-memory mode**
 3. **JPA / Hibernate**
-4. **Jackson**
-5. **Logback**
-6. **JUnit**
+4. **Dagger 2**
+5. **Gradle**
+6. **Jackson**
+7. **Logback**
+8. **JUnit**

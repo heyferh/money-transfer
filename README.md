@@ -1,4 +1,6 @@
 [![Build Status](https://travis-ci.org/heyferh/money-transfer.svg?branch=master)](https://travis-ci.org/heyferh/money-transfer)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/940512f823bd4c26a5c48b5cff0d8f62)](https://www.codacy.com/app/heyferh/money-transfer?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=heyferh/money-transfer&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/940512f823bd4c26a5c48b5cff0d8f62)](https://www.codacy.com/app/heyferh/money-transfer?utm_source=github.com&utm_medium=referral&utm_content=heyferh/money-transfer&utm_campaign=Badge_Coverage)
 ### Purpose
 1. RESTful API for money transfers between accounts
 2. Simple and to the point

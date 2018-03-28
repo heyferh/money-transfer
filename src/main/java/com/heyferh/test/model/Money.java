@@ -3,7 +3,6 @@ package com.heyferh.test.model;
 import com.heyferh.test.util.CurrencyCode;
 
 import java.math.BigDecimal;
-import java.util.Currency;
 
 import static java.math.BigDecimal.valueOf;
 

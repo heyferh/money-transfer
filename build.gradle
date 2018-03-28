@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'idea'
     id 'application'
+    id 'jacoco'
     id "net.ltgt.apt" version "0.15"
 }
 
@@ -35,6 +36,14 @@ task fatJar(type: Jar) {
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        csv.enabled = false
+        html.enabled = true
+    }
 }
 
 dependencies {

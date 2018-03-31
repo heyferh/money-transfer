@@ -63,32 +63,14 @@ public class TransferTest {
     @BeforeClass
     public static void setUp() throws Exception {
         AppComponent appComponent = DaggerAppComponent.create();
+
         restContext = new RestContext();
         restContext.addEndpoint(appComponent.accountEndpoint());
         restContext.addEndpoint(appComponent.transactionEndpoint());
         restContext.init();
 
         objectMapper.registerModule(new JavaTimeModule());
-        Unirest.setObjectMapper(new com.mashape.unirest.http.ObjectMapper() {
-            private final ObjectMapper objectMapper = TransferTest.objectMapper;
 
-            @Override
-            public <T> T readValue(String value, Class<T> valueType) {
-                try {
-                    return objectMapper.readValue(value, valueType);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            public String writeValue(Object value) {
-                try {
-                    return objectMapper.writeValueAsString(value);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
         generateAccounts();
         generateSimultaneousTransfers();
     }
@@ -146,8 +128,10 @@ public class TransferTest {
             double balance = ThreadLocalRandom.current().nextDouble(MIN_BALANCE, MAX_BALANCE);
             BigDecimal bd = BigDecimal.valueOf(balance);
             bd = bd.setScale(2, RoundingMode.HALF_EVEN);
-            Account account = Unirest.post(ACCOUNT_URL)
-                    .body(new Account(Money.rubles(bd))).asObject(Account.class).getBody();
+            String body = Unirest.post(ACCOUNT_URL)
+                    .body(objectMapper.writeValueAsString(new Account(Money.rubles(bd))))
+                    .asString().getBody();
+            Account account = objectMapper.readValue(body, Account.class);
             initialTotalBalance = initialTotalBalance.add(account.getMoney().getAmount());
             initialAmounts.put(account.getId(), account.getMoney().getAmount());
         }
@@ -178,9 +162,9 @@ public class TransferTest {
                 transferAmount = transferAmount.setScale(2, RoundingMode.HALF_EVEN);
                 try {
                     Unirest.post(TRANSFER_URL)
-                            .body(new Transfer(from, to, Money.rubles(transferAmount)))
-                            .asObject(Transaction.class).getBody();
-                } catch (UnirestException e) {
+                            .body(objectMapper.writeValueAsString(new Transfer(from, to, Money.rubles(transferAmount))))
+                            .asString().getBody();
+                } catch (JsonProcessingException | UnirestException e) {
                     logger.error("Error: ", e);
                 }
             }

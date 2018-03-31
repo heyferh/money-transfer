@@ -1,23 +1,25 @@
 package com.heyferh.test.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.heyferh.test.AppComponent;
+import com.heyferh.test.DaggerAppComponent;
 import com.heyferh.test.model.Account;
 import com.heyferh.test.model.Money;
 import com.heyferh.test.model.Transaction;
-import com.heyferh.test.repository.AccountRepository;
-import com.heyferh.test.repository.TransactionRepository;
-import com.heyferh.test.service.api.AccountService;
-import com.heyferh.test.service.api.TransactionService;
-import com.heyferh.test.service.impl.AccountServiceImpl;
-import com.heyferh.test.service.impl.TransactionServiceImpl;
-import com.heyferh.test.util.InsufficientBalanceException;
-import com.heyferh.test.util.NegativeFundsException;
-import com.heyferh.test.util.UnknownAccountException;
-import org.junit.Assert;
+import com.heyferh.test.model.Transfer;
+import com.heyferh.test.rest.RestContext;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -29,8 +31,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.heyferh.test.util.CurrencyCode.RUB;
-import static com.heyferh.test.util.MockCurrencyConverter.convert;
 import static java.math.BigDecimal.ZERO;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
@@ -39,71 +39,94 @@ public class TransferTest {
 
     private final static Logger logger = LoggerFactory.getLogger(TransferTest.class);
 
-    private final static AccountRepository accountRepository = new AccountRepository();
-    private final static TransactionRepository transactionRepository = new TransactionRepository();
-
-    private final static TransactionService transactionService = new TransactionServiceImpl(transactionRepository);
-    private final static AccountService accountService = new AccountServiceImpl(accountRepository, transactionRepository);
-
     private static final int MIN_ACCOUNTS = 50;
     private static final int MAX_ACCOUNTS = 100;
-
     private static final int MIN_BALANCE = 200;
     private static final int MAX_BALANCE = 500;
-
     private static final int MIN_THREADS = 5;
     private static final int MAX_THREADS = 10;
-
     private static final int MIN_TRANSFERS_PER_THREAD = 300;
     private static final int MAX_TRANSFERS_PER_THREAD = 500;
-
     private static final int MAX_TRANSFER_AMOUNT = 50;
 
     private static int totalAccounts;
     private static BigDecimal initialTotalBalance = ZERO;
     private static Map<Long, BigDecimal> initialAmounts = new HashMap<>();
 
+    private static RestContext restContext;
+    private static ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final String TRANSFER_URL = "http://localhost:4567/transfer";
+    private static final String TRANSFERS_BY_ACCOUNT_URL = "http://localhost:4567/transfer/{id}";
+    private static final String ACCOUNT_URL = "http://localhost:4567/account";
+
     @BeforeClass
     public static void setUp() throws Exception {
+        AppComponent appComponent = DaggerAppComponent.create();
+        restContext = new RestContext();
+        restContext.addEndpoint(appComponent.accountEndpoint());
+        restContext.addEndpoint(appComponent.transactionEndpoint());
+        restContext.init();
+
+        objectMapper.registerModule(new JavaTimeModule());
+        Unirest.setObjectMapper(new com.mashape.unirest.http.ObjectMapper() {
+            private final ObjectMapper objectMapper = TransferTest.objectMapper;
+
+            @Override
+            public <T> T readValue(String value, Class<T> valueType) {
+                try {
+                    return objectMapper.readValue(value, valueType);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            public String writeValue(Object value) {
+                try {
+                    return objectMapper.writeValueAsString(value);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
         generateAccounts();
         generateSimultaneousTransfers();
     }
 
-    @Test
-    public void testInitialBalanceSumStaysConstant() {
-        List<Account> accounts = accountService.findAll();
+    @AfterClass
+    public static void tearDown() {
+        restContext.stop();
+    }
 
-        BigDecimal sum = accounts.stream()
+    @Test
+    public void testInitialBalanceSumStaysConstant() throws Exception {
+        BigDecimal sum = getAccounts().stream()
                 .map(Account::getMoney)
                 .map(Money::getAmount)
                 .reduce(ZERO, BigDecimal::add);
-        logger.info("Total sum is {}", sum);
-
         assertEquals(0, initialTotalBalance.compareTo(sum));
     }
 
     @Test
-    public void testLowestAmountIsAboveZero() {
-        List<Account> accounts = accountService.findAll();
-
-        BigDecimal minBalance = accounts.stream()
+    public void testLowestAmountIsAboveZero() throws Exception {
+        BigDecimal minBalance = getAccounts().stream()
                 .map(Account::getMoney)
                 .map(Money::getAmount)
                 .min(BigDecimal::compareTo).orElse(ZERO);
-        logger.info("Min balance is {}", minBalance);
-
         assertTrue(minBalance.compareTo(ZERO) >= 0);
     }
 
     @Test
-    public void testAllTransfersTookPlace() {
-        List<Account> accounts = accountService.findAll();
-
-        for (Account account : accounts) {
+    public void testAllTransfersTookPlace() throws Exception {
+        for (Account account : getAccounts()) {
             long accountId = account.getId();
             BigDecimal expected = initialAmounts.get(accountId);
 
-            List<Transaction> transactions = transactionService.findByAccountId(accountId);
+            String body = Unirest.get(TRANSFERS_BY_ACCOUNT_URL)
+                    .routeParam("id", String.valueOf(accountId))
+                    .asString().getBody();
+            List<Transaction> transactions = objectMapper.readValue(body, new TypeReference<List<Transaction>>() {
+            });
             for (Transaction transaction : transactions) {
                 BigDecimal transferAmount = transaction.getMoney().getAmount();
                 if (transaction.getFrom() == accountId) {
@@ -117,61 +140,15 @@ public class TransferTest {
         }
     }
 
-    @Test
-    public void testTransferAmount() throws Exception {
-        BigDecimal fromAmount = new BigDecimal("12.34");
-        BigDecimal toAmount = new BigDecimal("56.78");
-        long fromId = accountService.create(new Account(Money.rubles(fromAmount))).getId();
-        long toId = accountService.create(new Account(Money.rubles(toAmount))).getId();
-
-        BigDecimal transferAmount = new BigDecimal("11.11");
-        accountService.transfer(fromId, toId, Money.rubles(transferAmount));
-
-        Account from = accountService.find(fromId);
-        Account to = accountService.find(toId);
-
-        Assert.assertEquals(0, fromAmount.subtract(transferAmount).compareTo(from.getMoney().getAmount()));
-        Assert.assertEquals(0, toAmount.add(transferAmount).compareTo(to.getMoney().getAmount()));
-    }
-
-    @Test
-    public void testCurrencyConversion() throws Exception {
-        BigDecimal fromAmount = new BigDecimal("12000.34");
-        BigDecimal toAmount = new BigDecimal("56123.78");
-        long fromId = accountService.create(new Account(Money.rubles(fromAmount))).getId();
-        long toId = accountService.create(new Account(Money.rubles(toAmount))).getId();
-
-        Money transferMoney = Money.euros(new BigDecimal("4.15"));
-        accountService.transfer(fromId, toId, transferMoney);
-
-        Account from = accountService.find(fromId);
-        Account to = accountService.find(toId);
-
-        Assert.assertEquals(0, fromAmount.subtract(convert(transferMoney, RUB)).compareTo(from.getMoney().getAmount()));
-        Assert.assertEquals(0, toAmount.add(convert(transferMoney, RUB)).compareTo(to.getMoney().getAmount()));
-
-    }
-
-    @Test(expected = InsufficientBalanceException.class)
-    public void testInsufficientBalance() throws Exception {
-        BigDecimal fromAmount = new BigDecimal("12.34");
-        BigDecimal toAmount = new BigDecimal("56.78");
-        long fromId = accountService.create(new Account(Money.rubles(fromAmount))).getId();
-        long toId = accountService.create(new Account(Money.rubles(toAmount))).getId();
-
-        BigDecimal transferAmount = new BigDecimal("9000.00");
-        accountService.transfer(fromId, toId, Money.rubles(transferAmount));
-    }
-
     private static void generateAccounts() throws Exception {
         totalAccounts = ThreadLocalRandom.current().nextInt(MIN_ACCOUNTS, MAX_ACCOUNTS);
         for (int i = 0; i < totalAccounts; i++) {
             double balance = ThreadLocalRandom.current().nextDouble(MIN_BALANCE, MAX_BALANCE);
             BigDecimal bd = BigDecimal.valueOf(balance);
             bd = bd.setScale(2, RoundingMode.HALF_EVEN);
-            Account account = accountService.create(new Account(Money.rubles(bd)));
-
-            initialTotalBalance = initialTotalBalance.add(bd);
+            Account account = Unirest.post(ACCOUNT_URL)
+                    .body(new Account(Money.rubles(bd))).asObject(Account.class).getBody();
+            initialTotalBalance = initialTotalBalance.add(account.getMoney().getAmount());
             initialAmounts.put(account.getId(), account.getMoney().getAmount());
         }
     }
@@ -200,11 +177,20 @@ public class TransferTest {
                 BigDecimal transferAmount = BigDecimal.valueOf(ThreadLocalRandom.current().nextDouble(MAX_TRANSFER_AMOUNT));
                 transferAmount = transferAmount.setScale(2, RoundingMode.HALF_EVEN);
                 try {
-                    accountService.transfer(from, to, Money.rubles(transferAmount));
-                } catch (InsufficientBalanceException | UnknownAccountException | NegativeFundsException ignore) {
-                    // valid cases
+                    Unirest.post(TRANSFER_URL)
+                            .body(new Transfer(from, to, Money.rubles(transferAmount)))
+                            .asObject(Transaction.class).getBody();
+                } catch (UnirestException e) {
+                    logger.error("Error: ", e);
                 }
             }
         };
+    }
+
+    private List<Account> getAccounts() throws UnirestException, IOException {
+        String body = Unirest.get(ACCOUNT_URL)
+                .asString().getBody();
+        return objectMapper.readValue(body, new TypeReference<List<Account>>() {
+        });
     }
 }

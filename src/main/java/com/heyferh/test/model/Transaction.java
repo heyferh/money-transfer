@@ -9,6 +9,9 @@ public class Transaction {
     private LocalDateTime date;
     private Money money;
 
+    public Transaction() {
+    }
+
     public Transaction(LocalDateTime date, long from, long to, Money money) {
         this.date = date;
         this.from = from;

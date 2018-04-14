@@ -8,25 +8,19 @@ import com.heyferh.test.service.api.TransactionService;
 import com.heyferh.test.util.InsufficientBalanceException;
 import com.heyferh.test.util.NegativeFundsException;
 import com.heyferh.test.util.UnknownAccountException;
+import org.springframework.beans.factory.annotation.Autowired;
 import spark.Service;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.List;
 
-@Singleton
 public class TransactionEndpoint implements EndpointConfigurer {
 
-    private final TransactionService transactionService;
-    private final AccountService accountService;
-    private final ObjectMapper objectMapper;
-
-    @Inject
-    public TransactionEndpoint(TransactionService transactionService, AccountService accountService, ObjectMapper objectMapper) {
-        this.transactionService = transactionService;
-        this.accountService = accountService;
-        this.objectMapper = objectMapper;
-    }
+    @Autowired
+    private TransactionService transactionService;
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public void configure(Service spark) {

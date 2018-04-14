@@ -5,23 +5,17 @@ import com.heyferh.test.model.Account;
 import com.heyferh.test.service.api.AccountService;
 import com.heyferh.test.util.NegativeFundsException;
 import com.heyferh.test.util.UnknownAccountException;
+import org.springframework.beans.factory.annotation.Autowired;
 import spark.Service;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.List;
 
-@Singleton
 public class AccountEndpoint implements EndpointConfigurer {
 
-    private final AccountService accountService;
-    private final ObjectMapper objectMapper;
-
-    @Inject
-    public AccountEndpoint(AccountService accountService, ObjectMapper objectMapper) {
-        this.accountService = accountService;
-        this.objectMapper = objectMapper;
-    }
+    @Autowired
+    private AccountService accountService;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public void configure(Service spark) {

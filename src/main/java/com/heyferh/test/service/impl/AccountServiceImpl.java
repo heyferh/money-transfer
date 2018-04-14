@@ -1,5 +1,7 @@
 package com.heyferh.test.service.impl;
 
+import com.codahale.metrics.annotation.Metered;
+import com.codahale.metrics.annotation.Timed;
 import com.heyferh.test.entity.AccountEntity;
 import com.heyferh.test.entity.MoneyEntity;
 import com.heyferh.test.entity.TransactionEntity;
@@ -13,6 +15,7 @@ import com.heyferh.test.util.NegativeFundsException;
 import com.heyferh.test.util.UnknownAccountException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,14 +32,10 @@ public class AccountServiceImpl implements AccountService {
 
     private final static Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
-    private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
-
-    public AccountServiceImpl(AccountRepository accountRepository,
-                              TransactionRepository transactionRepository) {
-        this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
-    }
+    @Autowired
+    private AccountRepository accountRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Override
     public Account find(long id) throws UnknownAccountException {
@@ -75,6 +74,8 @@ public class AccountServiceImpl implements AccountService {
                         accountEntity.getMoneyEntity().getCurrency()));
     }
 
+    @Timed(name = "transfer.timer")
+    @Metered(name = "transfer.meter")
     @Override
     public void transfer(long fromId, long toId, Money money) throws InsufficientBalanceException, NegativeFundsException, UnknownAccountException {
         if (money.getAmount().compareTo(BigDecimal.ZERO) < 0) {

@@ -6,6 +6,15 @@ public class Transfer {
     private long toId;
     private Money money;
 
+    public Transfer() {
+    }
+
+    public Transfer(long fromId, long toId, Money money) {
+        this.fromId = fromId;
+        this.toId = toId;
+        this.money = money;
+    }
+
     public long getFromId() {
         return fromId;
     }

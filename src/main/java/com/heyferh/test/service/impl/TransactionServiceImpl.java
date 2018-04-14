@@ -5,17 +5,15 @@ import com.heyferh.test.model.Money;
 import com.heyferh.test.model.Transaction;
 import com.heyferh.test.repository.TransactionRepository;
 import com.heyferh.test.service.api.TransactionService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class TransactionServiceImpl implements TransactionService {
 
-    private final TransactionRepository transactionRepository;
-
-    public TransactionServiceImpl(TransactionRepository transactionRepository) {
-        this.transactionRepository = transactionRepository;
-    }
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Override
     public List<Transaction> findByAccountId(long id) {
